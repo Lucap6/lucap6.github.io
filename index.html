@@ -1147,6 +1147,30 @@
 </footer>
 
 <!-- ================================================
+     COOKIE BANNER — deve stare PRIMA dello script
+================================================ -->
+<div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Informativa cookie" style="display:none">
+  <span>🍪 Questo sito usa Google Analytics solo per statistiche anonime. <a href="#" id="privacyLink">Scopri di più</a></span>
+  <button class="cookie-accept" id="cookieAccept">OK, ho capito</button>
+  <button class="cookie-decline" id="cookieDecline">No grazie</button>
+</div>
+
+<!-- Modale privacy -->
+<div id="privacyModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px">
+  <div style="background:white;border-radius:20px;padding:32px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto">
+    <h3 style="font-size:1.1rem;font-weight:700;color:#075E54;margin-bottom:12px">🍪 Informativa Cookie</h3>
+    <p style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:10px">Questo sito utilizza <strong>Google Analytics</strong> per raccogliere dati statistici anonimi sulle visite: numero di visitatori, pagine visualizzate, dispositivo utilizzato.</p>
+    <p style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:10px"><strong>Non viene raccolta nessuna informazione personale</strong> e i dati non sono usati per pubblicità o profilazione.</p>
+    <p style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:20px">Puoi accettare o rifiutare in qualsiasi momento. Se rifiuti, il sito funziona ugualmente.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button id="modalAccept" style="background:#25D366;color:white;border:none;padding:10px 22px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer">✅ Accetto</button>
+      <button id="modalDecline" style="background:#f1f1f1;color:#444;border:none;padding:10px 22px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer">❌ Rifiuto</button>
+      <button id="modalClose" style="background:none;border:none;color:#999;font-size:12px;cursor:pointer;align-self:center">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================
      JAVASCRIPT
 ================================================ -->
 <script>
@@ -1213,17 +1237,15 @@
   });
   /* ---- Cookie Banner ---- */
   (function() {
-    var banner = document.getElementById('cookieBanner');
-    var modal  = document.getElementById('privacyModal');
+    var banner  = document.getElementById('cookieBanner');
+    var modal   = document.getElementById('privacyModal');
 
-    // localStorage può fallire in incognito su alcuni browser — usiamo try/catch
     function getChoice() {
       try { return localStorage.getItem('cookieChoice'); } catch(e) { return null; }
     }
     function saveChoice(val) {
       try { localStorage.setItem('cookieChoice', val); } catch(e) {}
     }
-
     function enableGA()  { window['ga-disable-G-BCCF5XLMB6'] = false; }
     function disableGA() { window['ga-disable-G-BCCF5XLMB6'] = true;  }
 
@@ -1231,44 +1253,24 @@
       banner.classList.add('hiding');
       setTimeout(function() { banner.style.display = 'none'; }, 260);
     }
-
-    function acceptCookies() {
-      saveChoice('accepted');
-      hideBanner();
-      modal.style.display = 'none';
-      enableGA();
-    }
-
-    function declineCookies() {
-      saveChoice('declined');
-      hideBanner();
-      modal.style.display = 'none';
-      disableGA();
-    }
-
-    // Esponi globalmente (servono ai bottoni nel modal)
-    window.acceptCookies = acceptCookies;
-    window.declineCookies = declineCookies;
+    function accept() { saveChoice('accepted'); hideBanner(); modal.style.display = 'none'; enableGA(); }
+    function decline(){ saveChoice('declined');  hideBanner(); modal.style.display = 'none'; disableGA(); }
 
     // Controlla scelta precedente
     var choice = getChoice();
-    if (choice === 'accepted') { banner.style.display = 'none'; enableGA();  return; }
-    if (choice === 'declined') { banner.style.display = 'none'; disableGA(); return; }
+    if (choice === 'accepted') { enableGA();  return; }
+    if (choice === 'declined') { disableGA(); return; }
 
-    // Nessuna scelta ancora: mostra il banner
+    // Prima visita: mostra banner
     banner.style.display = 'flex';
 
-    document.getElementById('cookieAccept').addEventListener('click', acceptCookies);
-    document.getElementById('cookieDecline').addEventListener('click', declineCookies);
-
-    document.getElementById('privacyLink').addEventListener('click', function(e) {
-      e.preventDefault();
-      modal.style.display = 'flex';
-    });
-
-    modal.addEventListener('click', function(e) {
-      if (e.target === modal) modal.style.display = 'none';
-    });
+    document.getElementById('cookieAccept').addEventListener('click', accept);
+    document.getElementById('cookieDecline').addEventListener('click', decline);
+    document.getElementById('privacyLink').addEventListener('click', function(e){ e.preventDefault(); modal.style.display = 'flex'; });
+    document.getElementById('modalAccept').addEventListener('click', accept);
+    document.getElementById('modalDecline').addEventListener('click', decline);
+    document.getElementById('modalClose').addEventListener('click', function(){ modal.style.display = 'none'; });
+    modal.addEventListener('click', function(e){ if(e.target === modal) modal.style.display = 'none'; });
   })();
 
   document.getElementById('year').textContent = new Date().getFullYear();
@@ -1388,35 +1390,6 @@
 =======================================================
 -->
 
-<!-- ================================================
-     COOKIE BANNER
-================================================ -->
-<div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Informativa cookie" style="display:none">
-  <span>🍪 Questo sito usa Google Analytics solo per statistiche anonime. <a href="#privacy" id="privacyLink">Scopri di più</a></span>
-  <button class="cookie-accept" id="cookieAccept">OK, ho capito</button>
-  <button class="cookie-decline" id="cookieDecline">No grazie</button>
-</div>
-
-<!-- Modale privacy minimale -->
-<div id="privacyModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px">
-  <div style="background:white;border-radius:20px;padding:32px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;position:relative">
-    <h3 style="font-size:1.1rem;font-weight:700;color:var(--wa-header);margin-bottom:12px">🍪 Informativa Cookie</h3>
-    <p style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:10px">
-      Questo sito utilizza <strong>Google Analytics</strong> per raccogliere dati statistici anonimi sulle visite, come il numero di visitatori, le pagine visualizzate e il dispositivo utilizzato.
-    </p>
-    <p style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:10px">
-      I dati sono aggregati e anonimi: <strong>non viene raccolta nessuna informazione personale</strong> e non vengono utilizzati per scopi pubblicitari o di profilazione.
-    </p>
-    <p style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:20px">
-      Puoi accettare o rifiutare il tracciamento. Se rifiuti, il sito funziona comunque normalmente ma Google Analytics non verrà attivato.
-    </p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button onclick="acceptCookies()" style="background:var(--wa-green);color:white;border:none;padding:10px 22px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer">✅ Accetto</button>
-      <button onclick="declineCookies()" style="background:#f1f1f1;color:#444;border:none;padding:10px 22px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer">❌ Rifiuto</button>
-      <button onclick="document.getElementById('privacyModal').style.display='none'" style="background:none;border:none;color:#999;font-size:12px;cursor:pointer;align-self:center">Chiudi</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
