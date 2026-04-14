@@ -659,8 +659,81 @@
     footer a { color:var(--wa-green); }
 
     /* ============================================================
-       RESPONSIVE TWEAKS
+       COOKIE BANNER — minimal & non invasivo
     ============================================================ */
+    .cookie-banner {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      background: rgba(17, 27, 33, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: rgba(255,255,255,.85);
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 14px 20px;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 30px rgba(0,0,0,.35);
+      max-width: calc(100vw - 40px);
+      white-space: nowrap;
+      animation: slideUp .4s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity:1; transform: translateX(-50%) translateY(0); }
+    }
+    .cookie-banner a {
+      color: var(--wa-green);
+      text-decoration: underline;
+      white-space: nowrap;
+    }
+    .cookie-accept {
+      background: var(--wa-green);
+      color: white;
+      border: none;
+      padding: 7px 18px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, transform .2s;
+      flex-shrink: 0;
+    }
+    .cookie-accept:hover { background: var(--wa-teal); transform: scale(1.05); }
+    .cookie-decline {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.45);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color .2s;
+    }
+    .cookie-decline:hover { color: rgba(255,255,255,.75); }
+    .cookie-banner.hidden {
+      animation: slideDown .3s ease forwards;
+    }
+    @keyframes slideDown {
+      to { opacity:0; transform: translateX(-50%) translateY(30px); pointer-events:none; }
+    }
+    @media(max-width: 600px) {
+      .cookie-banner {
+        border-radius: 16px;
+        white-space: normal;
+        flex-wrap: wrap;
+        bottom: 14px;
+        padding: 14px 16px;
+        gap: 10px;
+      }
+    }
     @media(max-width:480px) {
       .books-grid { grid-template-columns:repeat(2, 1fr); gap:14px; }
       .rimini-grid { grid-template-columns:1fr; }
@@ -1142,6 +1215,51 @@
       });
     }
   });
+  /* ---- Cookie Banner ---- */
+  const cookieBanner  = document.getElementById('cookieBanner');
+  const privacyModal  = document.getElementById('privacyModal');
+
+  const cookieChoice = localStorage.getItem('cookieChoice');
+  if (cookieChoice === 'accepted') {
+    cookieBanner.style.display = 'none';
+    enableGA();
+  } else if (cookieChoice === 'declined') {
+    cookieBanner.style.display = 'none';
+    disableGA();
+  }
+
+  document.getElementById('cookieAccept').addEventListener('click', acceptCookies);
+  document.getElementById('cookieDecline').addEventListener('click', declineCookies);
+  document.getElementById('privacyLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    privacyModal.style.display = 'flex';
+  });
+  privacyModal.addEventListener('click', function(e) {
+    if (e.target === privacyModal) privacyModal.style.display = 'none';
+  });
+
+  function acceptCookies() {
+    localStorage.setItem('cookieChoice', 'accepted');
+    hideBanner();
+    privacyModal.style.display = 'none';
+    enableGA();
+  }
+
+  function declineCookies() {
+    localStorage.setItem('cookieChoice', 'declined');
+    hideBanner();
+    privacyModal.style.display = 'none';
+    disableGA();
+  }
+
+  function hideBanner() {
+    cookieBanner.classList.add('hidden');
+    setTimeout(() => cookieBanner.style.display = 'none', 300);
+  }
+
+  function enableGA()  { window['ga-disable-G-BCCF5XLMB6'] = false; }
+  function disableGA() { window['ga-disable-G-BCCF5XLMB6'] = true;  }
+
   document.getElementById('year').textContent = new Date().getFullYear();
 
   /* ---- Hamburger menu ---- */
@@ -1258,6 +1376,36 @@
      - Sostituisci "#" con il link Amazon del libro corrispondente
 =======================================================
 -->
+
+<!-- ================================================
+     COOKIE BANNER
+================================================ -->
+<div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Informativa cookie">
+  <span>🍪 Questo sito usa Google Analytics solo per statistiche anonime. <a href="#privacy" id="privacyLink">Scopri di più</a></span>
+  <button class="cookie-accept" id="cookieAccept">OK, ho capito</button>
+  <button class="cookie-decline" id="cookieDecline">No grazie</button>
+</div>
+
+<!-- Modale privacy minimale -->
+<div id="privacyModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:white;border-radius:20px;padding:32px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;position:relative">
+    <h3 style="font-size:1.1rem;font-weight:700;color:var(--wa-header);margin-bottom:12px">🍪 Informativa Cookie</h3>
+    <p style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:10px">
+      Questo sito utilizza <strong>Google Analytics</strong> per raccogliere dati statistici anonimi sulle visite, come il numero di visitatori, le pagine visualizzate e il dispositivo utilizzato.
+    </p>
+    <p style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:10px">
+      I dati sono aggregati e anonimi: <strong>non viene raccolta nessuna informazione personale</strong> e non vengono utilizzati per scopi pubblicitari o di profilazione.
+    </p>
+    <p style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:20px">
+      Puoi accettare o rifiutare il tracciamento. Se rifiuti, il sito funziona comunque normalmente ma Google Analytics non verrà attivato.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button onclick="acceptCookies()" style="background:var(--wa-green);color:white;border:none;padding:10px 22px;border-radius:100px;font-size:13px;font-weight:700;cursor:pointer">✅ Accetto</button>
+      <button onclick="declineCookies()" style="background:#f1f1f1;color:#444;border:none;padding:10px 22px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer">❌ Rifiuto</button>
+      <button onclick="document.getElementById('privacyModal').style.display='none'" style="background:none;border:none;color:#999;font-size:12px;cursor:pointer;align-self:center">Chiudi</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
