@@ -1,0 +1,37 @@
+# robots.txt per lucapari.it
+# Autorizza tutti i motori di ricerca e i crawler AI a leggere tutto
+
+User-agent: *
+Allow: /
+
+# Motori di ricerca principali
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# Crawler AI (ChatGPT, Perplexity, ecc.)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# Posizione della sitemap
+Sitemap: https://lucapari.it/sitemap.xml
