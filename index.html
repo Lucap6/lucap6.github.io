@@ -1081,7 +1081,67 @@
      JAVASCRIPT
 ================================================ -->
 <script>
-  /* ---- Footer year ---- */
+  /* ---- Google Analytics Event Tracking ---- */
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (!link || !link.href) return;
+
+    // Libri — pulsanti "Ordina ora!" e "Scarica ora!"
+    if (link.classList.contains('btn-order')) {
+      const title = link.closest('article')?.querySelector('.book-title')?.textContent?.trim() || 'sconosciuto';
+      gtag('event', 'click_libro', {
+        'event_category': 'Libri',
+        'event_label': title,
+        'value': 1
+      });
+    }
+
+    // Spotify
+    if (link.href.includes('spotify.com')) {
+      gtag('event', 'click_spotify', {
+        'event_category': 'Musica',
+        'event_label': 'Spotify - Lucap6',
+        'value': 1
+      });
+    }
+
+    // Spreaker / Podcast
+    if (link.href.includes('spreaker.com')) {
+      const epTitle = link.querySelector('.ep-title')?.textContent?.trim() || 'Tutti gli episodi';
+      gtag('event', 'click_podcast', {
+        'event_category': 'Podcast',
+        'event_label': epTitle,
+        'value': 1
+      });
+    }
+
+    // LinkedIn
+    if (link.href.includes('linkedin.com')) {
+      gtag('event', 'click_linkedin', {
+        'event_category': 'Contatti',
+        'event_label': 'LinkedIn',
+        'value': 1
+      });
+    }
+
+    // Instagram
+    if (link.href.includes('instagram.com')) {
+      gtag('event', 'click_instagram', {
+        'event_category': 'Contatti',
+        'event_label': 'Instagram',
+        'value': 1
+      });
+    }
+
+    // Email
+    if (link.href.startsWith('mailto:')) {
+      gtag('event', 'click_email', {
+        'event_category': 'Contatti',
+        'event_label': 'Email',
+        'value': 1
+      });
+    }
+  });
   document.getElementById('year').textContent = new Date().getFullYear();
 
   /* ---- Hamburger menu ---- */
