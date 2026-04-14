@@ -667,62 +667,57 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 9999;
-      background: rgba(17, 27, 33, 0.92);
+      background: rgba(17, 27, 33, 0.93);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       color: rgba(255,255,255,.85);
       font-size: 13px;
       line-height: 1.5;
-      padding: 14px 20px;
+      padding: 13px 18px;
       border-radius: 100px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       box-shadow: 0 4px 30px rgba(0,0,0,.35);
       max-width: calc(100vw - 40px);
       white-space: nowrap;
-      animation: slideUp .4s cubic-bezier(.22,1,.36,1) both;
+      transition: opacity .25s ease, transform .25s ease;
+      pointer-events: auto;
     }
-    @keyframes slideUp {
-      from { opacity:0; transform: translateX(-50%) translateY(20px); }
-      to   { opacity:1; transform: translateX(-50%) translateY(0); }
+    .cookie-banner.hiding {
+      opacity: 0;
+      transform: translateX(-50%) translateY(16px);
+      pointer-events: none;
     }
     .cookie-banner a {
       color: var(--wa-green);
       text-decoration: underline;
       white-space: nowrap;
+      cursor: pointer;
     }
     .cookie-accept {
       background: var(--wa-green);
       color: white;
       border: none;
-      padding: 7px 18px;
+      padding: 7px 16px;
       border-radius: 100px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
-      transition: background .2s, transform .2s;
       flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
     }
-    .cookie-accept:hover { background: var(--wa-teal); transform: scale(1.05); }
     .cookie-decline {
       background: none;
       border: none;
       color: rgba(255,255,255,.45);
       font-size: 12px;
       cursor: pointer;
-      padding: 4px;
+      padding: 6px;
       white-space: nowrap;
       flex-shrink: 0;
-      transition: color .2s;
-    }
-    .cookie-decline:hover { color: rgba(255,255,255,.75); }
-    .cookie-banner.hidden {
-      animation: slideDown .3s ease forwards;
-    }
-    @keyframes slideDown {
-      to { opacity:0; transform: translateX(-50%) translateY(30px); pointer-events:none; }
+      -webkit-tap-highlight-color: transparent;
     }
     @media(max-width: 600px) {
       .cookie-banner {
@@ -732,6 +727,7 @@
         bottom: 14px;
         padding: 14px 16px;
         gap: 10px;
+        font-size: 12.5px;
       }
     }
     @media(max-width:480px) {
@@ -1216,49 +1212,64 @@
     }
   });
   /* ---- Cookie Banner ---- */
-  const cookieBanner  = document.getElementById('cookieBanner');
-  const privacyModal  = document.getElementById('privacyModal');
+  (function() {
+    var banner = document.getElementById('cookieBanner');
+    var modal  = document.getElementById('privacyModal');
 
-  const cookieChoice = localStorage.getItem('cookieChoice');
-  if (cookieChoice === 'accepted') {
-    cookieBanner.style.display = 'none';
-    enableGA();
-  } else if (cookieChoice === 'declined') {
-    cookieBanner.style.display = 'none';
-    disableGA();
-  }
+    // localStorage può fallire in incognito su alcuni browser — usiamo try/catch
+    function getChoice() {
+      try { return localStorage.getItem('cookieChoice'); } catch(e) { return null; }
+    }
+    function saveChoice(val) {
+      try { localStorage.setItem('cookieChoice', val); } catch(e) {}
+    }
 
-  document.getElementById('cookieAccept').addEventListener('click', acceptCookies);
-  document.getElementById('cookieDecline').addEventListener('click', declineCookies);
-  document.getElementById('privacyLink').addEventListener('click', function(e) {
-    e.preventDefault();
-    privacyModal.style.display = 'flex';
-  });
-  privacyModal.addEventListener('click', function(e) {
-    if (e.target === privacyModal) privacyModal.style.display = 'none';
-  });
+    function enableGA()  { window['ga-disable-G-BCCF5XLMB6'] = false; }
+    function disableGA() { window['ga-disable-G-BCCF5XLMB6'] = true;  }
 
-  function acceptCookies() {
-    localStorage.setItem('cookieChoice', 'accepted');
-    hideBanner();
-    privacyModal.style.display = 'none';
-    enableGA();
-  }
+    function hideBanner() {
+      banner.classList.add('hiding');
+      setTimeout(function() { banner.style.display = 'none'; }, 260);
+    }
 
-  function declineCookies() {
-    localStorage.setItem('cookieChoice', 'declined');
-    hideBanner();
-    privacyModal.style.display = 'none';
-    disableGA();
-  }
+    function acceptCookies() {
+      saveChoice('accepted');
+      hideBanner();
+      modal.style.display = 'none';
+      enableGA();
+    }
 
-  function hideBanner() {
-    cookieBanner.classList.add('hidden');
-    setTimeout(() => cookieBanner.style.display = 'none', 300);
-  }
+    function declineCookies() {
+      saveChoice('declined');
+      hideBanner();
+      modal.style.display = 'none';
+      disableGA();
+    }
 
-  function enableGA()  { window['ga-disable-G-BCCF5XLMB6'] = false; }
-  function disableGA() { window['ga-disable-G-BCCF5XLMB6'] = true;  }
+    // Esponi globalmente (servono ai bottoni nel modal)
+    window.acceptCookies = acceptCookies;
+    window.declineCookies = declineCookies;
+
+    // Controlla scelta precedente
+    var choice = getChoice();
+    if (choice === 'accepted') { banner.style.display = 'none'; enableGA();  return; }
+    if (choice === 'declined') { banner.style.display = 'none'; disableGA(); return; }
+
+    // Nessuna scelta ancora: mostra il banner
+    banner.style.display = 'flex';
+
+    document.getElementById('cookieAccept').addEventListener('click', acceptCookies);
+    document.getElementById('cookieDecline').addEventListener('click', declineCookies);
+
+    document.getElementById('privacyLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      modal.style.display = 'flex';
+    });
+
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  })();
 
   document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -1380,7 +1391,7 @@
 <!-- ================================================
      COOKIE BANNER
 ================================================ -->
-<div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Informativa cookie">
+<div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Informativa cookie" style="display:none">
   <span>🍪 Questo sito usa Google Analytics solo per statistiche anonime. <a href="#privacy" id="privacyLink">Scopri di più</a></span>
   <button class="cookie-accept" id="cookieAccept">OK, ho capito</button>
   <button class="cookie-decline" id="cookieDecline">No grazie</button>
